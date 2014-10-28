@@ -1,9 +1,14 @@
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.importlib import import_module
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
+
+try:
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+except ImportError:
+    from django.contrib.auth.models import User
 
 from drip.models import SentDrip
 
@@ -225,7 +230,7 @@ class DripBase(object):
 
     def queryset(self):
         """
-        Returns a queryset of auth.User who meet the
+        Returns a queryset of User who meet the
         criteria of the drip.
 
         Alternatively, you could create Drips on the fly

@@ -1,8 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+
+try:
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+except ImportError:
+    from django.contrib.auth.models import User
 
 # just using this to parse, but totally insane package naming...
 # https://bitbucket.org/schinckel/django-timedelta-field/
@@ -21,13 +27,12 @@ class Drip(models.Model):
 
     enabled = models.BooleanField(default=False)
 
-    from_email = models.EmailField(null=True, blank=True,
-        help_text='Set a custom from email.')
+    from_email = models.EmailField(null=True, blank=True, help_text='Set a custom from email.')
     from_email_name = models.CharField(max_length=150, null=True, blank=True,
-        help_text="Set a name for a custom from email.")
+                                       help_text="Set a name for a custom from email.")
     subject_template = models.TextField(null=True, blank=True)
     body_html_template = models.TextField(null=True, blank=True,
-        help_text='You will have settings and user in the context.')
+                                          help_text='You will have settings and user in the context.')
     message_class = models.CharField(max_length=120, blank=True, default='default')
 
     @property
@@ -53,17 +58,16 @@ class SentDrip(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     drip = models.ForeignKey('drip.Drip', related_name='sent_drips')
-    user = models.ForeignKey('auth.User', related_name='sent_drips')
+    user = models.ForeignKey(User, related_name='sent_drips')
 
     subject = models.TextField()
     body = models.TextField()
     from_email = models.EmailField(
-        null=True, default=None # For south so that it can migrate existing rows.
+        null=True, default=None  # For south so that it can migrate existing rows.
     )
     from_email_name = models.CharField(max_length=150,
-        null=True, default=None # For south so that it can migrate existing rows.
+                                       null=True, default=None  # For south so that it can migrate existing rows.
     )
-
 
 
 METHOD_TYPES = (
@@ -88,6 +92,7 @@ LOOKUP_TYPES = (
     ('iendswith', 'ends with (case insensitive)'),
 )
 
+
 class QuerySetRule(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     lastchanged = models.DateTimeField(auto_now=True)
@@ -99,8 +104,8 @@ class QuerySetRule(models.Model):
     lookup_type = models.CharField(max_length=12, default='exact', choices=LOOKUP_TYPES)
 
     field_value = models.CharField(max_length=255,
-        help_text=('Can be anything from a number, to a string. Or, do ' +
-                   '`now-7 days` or `now+3 days` for fancy timedelta.'))
+                                   help_text=('Can be anything from a number, to a string. Or, do ' +
+                                              '`now-7 days` or `now+3 days` for fancy timedelta.'))
 
     def clean(self):
         try:
